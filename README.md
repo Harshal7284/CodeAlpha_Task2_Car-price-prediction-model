@@ -1,4 +1,4 @@
-# AutoValue: Smart Car Price Prediction 🚗
+# Car Price Prediction Model 🚗
 
 An end-to-end Machine Learning web application that predicts the selling price of used cars based on historical sales data. The application uses a Linear Regression model trained on various car features and provides a clean, interactive web interface for users to get instant price estimates.
 

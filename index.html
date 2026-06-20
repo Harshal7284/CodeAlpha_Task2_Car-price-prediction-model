@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Car Price Predictor | AI Valuation</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700&family=Outfit:wght@500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <div class="bg-gradient"></div>
+    <div class="bg-grid"></div>
+
+    <header class="header">
+        <div class="container header-inner">
+            <div class="logo">
+                <span class="logo-icon" aria-hidden="true">🚗</span>
+                <div>
+                    <h1>AutoValue</h1>
+                    <p>Smart Car Price Prediction</p>
+                </div>
+            </div>
+            <div class="badge">
+                <span class="badge-dot"></span>
+                Model R²: {{ model_accuracy }}%
+            </div>
+        </div>
+    </header>
+
+    <main class="container main-content">
+        <section class="hero">
+            <h2>Estimate your car's resale value</h2>
+            <p>Enter your vehicle details below and get an instant price prediction powered by machine learning.</p>
+        </section>
+
+        <div class="layout">
+            <section class="card form-card">
+                <div class="card-header">
+                    <h3>Vehicle Details</h3>
+                    <span class="step-label">Fill all fields</span>
+                </div>
+
+                <form id="predictForm" novalidate>
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label for="year">Manufacturing Year</label>
+                            <select id="year" name="year" required>
+                                <option value="" disabled selected>Select year</option>
+                                {% for year in years %}
+                                <option value="{{ year }}">{{ year }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="present_price">Showroom Price (Lakhs)</label>
+                            <div class="input-with-icon">
+                                <span class="input-prefix">₹</span>
+                                <input type="number" id="present_price" name="present_price" step="0.01" min="0.1" placeholder="e.g. 8.50" required>
+                                <span class="input-suffix">L</span>
+                            </div>
+                        </div>
+
+                        <div class="form-group full-width">
+                            <label for="driven_kms">Kilometers Driven</label>
+                            <input type="number" id="driven_kms" name="driven_kms" min="0" step="1" placeholder="e.g. 45000" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="fuel_type">Fuel Type</label>
+                            <select id="fuel_type" name="fuel_type" required>
+                                <option value="" disabled selected>Select fuel</option>
+                                {% for fuel in fuel_types %}
+                                <option value="{{ fuel }}">{{ fuel }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="transmission">Transmission</label>
+                            <select id="transmission" name="transmission" required>
+                                <option value="" disabled selected>Select type</option>
+                                {% for trans in transmissions %}
+                                <option value="{{ trans }}">{{ trans }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+
+                    <div id="errorBox" class="error-box hidden" role="alert"></div>
+
+                    <button type="submit" class="btn-primary" id="submitBtn">
+                        <span class="btn-text">Predict Price</span>
+                        <span class="btn-loader hidden"></span>
+                    </button>
+                </form>
+            </section>
+
+            <section class="card result-card" id="resultCard">
+                <div class="result-placeholder" id="resultPlaceholder">
+                    <div class="placeholder-icon">📊</div>
+                    <h3>Your prediction will appear here</h3>
+                    <p>Complete the form and click Predict Price to see the estimated resale value.</p>
+                </div>
+
+                <div class="result-content hidden" id="resultContent">
+                    <div class="result-header">
+                        <span class="result-label">Estimated Selling Price</span>
+                        <div class="price-display">
+                            <span class="currency">₹</span>
+                            <span class="price-value" id="predictedPrice">0.00</span>
+                            <span class="price-unit">Lakhs</span>
+                        </div>
+                    </div>
+
+                    <div class="result-divider"></div>
+
+                    <h4>Input Summary</h4>
+                    <ul class="summary-list">
+                        <li><span>Year</span><strong id="summaryYear">—</strong></li>
+                        <li><span>Car Age</span><strong id="summaryAge">—</strong></li>
+                        <li><span>Showroom Price</span><strong id="summaryPrice">—</strong></li>
+                        <li><span>KMs Driven</span><strong id="summaryKms">—</strong></li>
+                        <li><span>Fuel</span><strong id="summaryFuel">—</strong></li>
+                        <li><span>Transmission</span><strong id="summaryTrans">—</strong></li>
+                    </ul>
+
+                    <div class="insight-box" id="insightBox">
+                        <span class="insight-icon" id="insightIcon">💡</span>
+                        <p id="insightText">This estimate is based on historical sales data and linear regression. Actual market prices may vary.</p>
+                    </div>
+                </div>
+            </section>
+        </div>
+
+        <section class="features">
+            <article class="feature-item">
+                <span>⚡</span>
+                <h4>Instant Results</h4>
+                <p>Get predictions in seconds without refreshing the page.</p>
+            </article>
+            <article class="feature-item">
+                <span>🎯</span>
+                <h4>ML Powered</h4>
+                <p>Uses a trained Linear Regression model saved as pickle.</p>
+            </article>
+            <article class="feature-item">
+                <span>📱</span>
+                <h4>Responsive UI</h4>
+                <p>Works smoothly on desktop, tablet, and mobile devices.</p>
+            </article>
+        </section>
+    </main>
+
+    <footer class="footer">
+        <div class="container">
+            <p>Car Sales Price Prediction · CodeAlpha Task 3</p>
+        </div>
+    </footer>
+
+    <script>
+        const form = document.getElementById("predictForm");
+        const submitBtn = document.getElementById("submitBtn");
+        const btnText = submitBtn.querySelector(".btn-text");
+        const btnLoader = submitBtn.querySelector(".btn-loader");
+        const errorBox = document.getElementById("errorBox");
+        const resultPlaceholder = document.getElementById("resultPlaceholder");
+        const resultContent = document.getElementById("resultContent");
+        const resultCard = document.getElementById("resultCard");
+
+        form.addEventListener("submit", async (event) => {
+            event.preventDefault();
+            hideError();
+
+            const formData = {
+                year: document.getElementById("year").value,
+                present_price: document.getElementById("present_price").value,
+                driven_kms: document.getElementById("driven_kms").value,
+                fuel_type: document.getElementById("fuel_type").value,
+                transmission: document.getElementById("transmission").value
+            };
+
+            if (!formData.year || !formData.present_price || !formData.driven_kms || !formData.fuel_type || !formData.transmission) {
+                showError("Please fill in all fields before predicting.");
+                return;
+            }
+
+            setLoading(true);
+
+            try {
+                const response = await fetch("/predict", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(formData)
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    showError(data.error || "Prediction failed. Please try again.");
+                    return;
+                }
+
+                showResult(data);
+            } catch (error) {
+                showError("Unable to connect to the server. Make sure app.py is running.");
+            } finally {
+                setLoading(false);
+            }
+        });
+
+        function setLoading(isLoading) {
+            submitBtn.disabled = isLoading;
+            btnText.classList.toggle("hidden", isLoading);
+            btnLoader.classList.toggle("hidden", !isLoading);
+        }
+
+        function showError(message) {
+            errorBox.textContent = message;
+            errorBox.classList.remove("hidden");
+        }
+
+        function hideError() {
+            errorBox.classList.add("hidden");
+            errorBox.textContent = "";
+        }
+
+        function showResult(data) {
+            resultPlaceholder.classList.add("hidden");
+            resultContent.classList.remove("hidden");
+            resultCard.classList.add("has-result");
+
+            const priceEl = document.getElementById("predictedPrice");
+            const insightBox = document.getElementById("insightBox");
+            const insightIcon = document.getElementById("insightIcon");
+            const insightText = document.getElementById("insightText");
+
+            const rawPrice = Number(data.raw_prediction ?? data.predicted_price);
+            const displayPrice = Math.max(0, Number(data.predicted_price ?? rawPrice));
+            const wasAdjusted = Boolean(data.was_adjusted) || rawPrice < 0;
+
+            priceEl.textContent = displayPrice.toFixed(2);
+            priceEl.classList.toggle("price-adjusted", wasAdjusted);
+
+            document.getElementById("summaryYear").textContent = data.year;
+            document.getElementById("summaryAge").textContent = data.car_age + " years";
+            document.getElementById("summaryPrice").textContent = "₹ " + data.present_price.toFixed(2) + " L";
+            document.getElementById("summaryKms").textContent = Number(data.driven_kms).toLocaleString("en-IN") + " km";
+            document.getElementById("summaryFuel").textContent = data.fuel_type;
+            document.getElementById("summaryTrans").textContent = data.transmission;
+
+            if (wasAdjusted) {
+                insightBox.classList.add("warning-box");
+                insightIcon.textContent = "⚠️";
+                insightText.textContent = data.message || (
+                    "The model estimated " + rawPrice.toFixed(2) + " Lakhs, which is not realistic. " +
+                    "The price has been adjusted to ₹0.00 Lakhs."
+                );
+            } else {
+                insightBox.classList.remove("warning-box");
+                insightIcon.textContent = "💡";
+                insightText.textContent = "This estimate is based on historical sales data and linear regression. Actual market prices may vary.";
+            }
+        }
+    </script>
+</body>
+</html>
